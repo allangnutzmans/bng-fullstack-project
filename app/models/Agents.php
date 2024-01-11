@@ -2,9 +2,6 @@
 
 namespace bng\Models;
 
-use bng\Models\BaseModel;
-
-
 class Agents extends BaseModel
 {
     public function checkLogin($username, $password)
@@ -242,6 +239,41 @@ class Agents extends BaseModel
         $this->db_connect();
         $this->non_query("DELETE FROM persons WHERE id = :id", $param);
 
+    }
+
+    public function checkCurrentPassword($current_password)
+    {
+        $param = [
+            ":id" => $_SESSION['user']->id,
+        ];
+
+        $this->db_connect();
+        $result = $this->query("SELECT passwrd FROM agents WHERE " .
+        "id = :id", $param);
+
+
+        if (password_verify($current_password, $result->results[0]->passwrd)){
+            return [
+                "status" => true
+            ];
+        } else {
+            return [
+                "status" => false
+            ];
+        }
+
+    }
+
+    public function updateAgentPassword($new_password)
+    {
+        $new_password = "Aa123456";
+        $params = [
+            ":passwrd" => password_hash($new_password, PASSWORD_DEFAULT),
+            ":id" => $_SESSION['user']->id
+        ];
+
+        $this->db_connect();
+        $this->query("UPDATE agents FROM set passwrd = :passwrd, updated_at = NOW() WHERE id = :id", $params);
     }
 
 }

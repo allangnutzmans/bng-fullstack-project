@@ -563,7 +563,7 @@ class Agent extends BaseController
         $writer->save('php://output');
 
         loggerRegister(getActiveUsername() . " - downloaded the list of clients to: " . $filename . " | total: " .
-        count($data) -1 . "registers");
+        count($data) -1 . " registers");
 
 
     }
