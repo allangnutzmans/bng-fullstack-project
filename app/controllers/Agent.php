@@ -18,7 +18,7 @@ class Agent extends BaseController
             $results = $model->getAgentClients($id_agent);
 
             $data['user'] = $_SESSION['user'];
-            $data['clients'] = $results['data']->results;
+            $data['clients'] = $results['data'];
 
 
             $this->view('layouts/html_header');
@@ -526,5 +526,47 @@ class Agent extends BaseController
         $this->uploadFileForm();
 
     }
+
+    public function exportClientsXLSX()
+    {
+        if(!checkSession() || $_SESSION['user']->profile != 'agent') {
+            header("Location: index.php");
+        }
+
+        //getAllClients
+        $model = new Agents();
+        $results = $model->getAgentClients($_SESSION['user']->id);
+
+        //header
+        $data[] = ['name', 'gender', 'birthdate', 'email', 'phone', 'interests', 'created_at', 'updated_at'];
+
+        foreach ($results['data'] as $client){
+
+            unset($client->id);
+
+            $data[] = (array)$client;
+
+        }
+
+        //store data into XSLX
+        $filename = "output" . time() . ".xlsx";
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet->removeSheetByIndex(0);
+        $worksheet = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($spreadsheet, 'data');
+        $spreadsheet->addSheet($worksheet);
+        $worksheet->fromArray($data);
+
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="'. urlencode($filename) . '"');
+        $writer->save('php://output');
+
+        loggerRegister(getActiveUsername() . " - downloaded the list of clients to: " . $filename . " | total: " .
+        count($data) -1 . "registers");
+
+
+    }
+
 
 }

@@ -82,3 +82,8 @@
 [2024-01-10T20:47:58.476350-03:00] BNG_LOGS.ERROR: agente1@bng.com - attempt to load invalid file: ficheiro.xlsx, with a  mismatching header [] []
 [2024-01-10T20:49:06.612113-03:00] BNG_LOGS.INFO: agente1@bng.com - file loaded: dados_clientes_1.xlsx [] []
 [2024-01-10T20:49:06.612354-03:00] BNG_LOGS.INFO: agente1@bng.com - report: {"total":4,"total_loaded":0,"total_unloaded":4} [] []
+[2024-01-11T12:03:49.138272-03:00] BNG_LOGS.INFO: agente1@bng.com - logged in successfully. [] []
+[2024-01-11T12:15:54.033583-03:00] BNG_LOGS.INFO: agente1@bng.com - downloaded the list of clients to: output 1704986153.xlsx | total: 6registers [] []
+[2024-01-11T12:17:10.499309-03:00] BNG_LOGS.INFO: agente1@bng.com - downloaded the list of clients to: output 1704986230.xlsx | total: 6registers [] []
+[2024-01-11T12:20:19.450181-03:00] BNG_LOGS.INFO: agente1@bng.com - downloaded the list of clients to: output1704986419.xlsx | total: 6registers [] []
+[2024-01-11T12:21:27.615010-03:00] BNG_LOGS.INFO: agente1@bng.com - downloaded the list of clients to: output1704986487.xlsx | total: 6registers [] []

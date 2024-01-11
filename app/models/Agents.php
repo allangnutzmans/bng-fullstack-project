@@ -94,7 +94,7 @@ class Agents extends BaseModel
 
         return [
             'status' => 'success',
-            'data' => $results
+            'data' => $results->results
         ];
     }
 
