@@ -6,14 +6,14 @@
             <h4 class="mb-3">Clientes registados</h4>
 
             <hr>
-
+            <?php if (count($clients) == 0): ?>
             <p class="my-4 text-center opacity-75">Não existem clientes registados.</p>
 
             <div class="text-center mb-5">
-                <a href="#" class="btn btn-secondary px-4"><i class="fa-solid fa-chevron-left me-2"></i>Voltar</a>
+                <a href="?ct=main&mt=index" class="btn btn-secondary px-4"><i class="fa-solid fa-chevron-left me-2"></i>Voltar</a>
             </div>
-
-            <table class="table table-striped table-bordered">
+            <?php else: ?>
+            <table class="table table-striped table-bordered" id="table_clients">
                 <thead class="table-dark">
                     <tr>
                         <th>Nome</th>
@@ -27,29 +27,39 @@
                     </tr>
                 </thead>
                 <tbody>
+                <?php foreach ($clients as $client):?>
                     <tr>
-                        <td>[Nome do cliente]</td>
-                        <td class="text-center">[Sexo]</td>
-                        <td class="text-center">[Data nascimento]</td>
-                        <td>[Email]</td>
-                        <td class="text-center">[Telefone]</td>
-                        <td>[Interesses]</td>
-                        <td>[Agente]</td>
-                        <td>[Data registo]</td>
+                        <td><?= $client->name ?></td>
+                        <td class="text-center"><?= $client->gender ?></td>
+                        <td class="text-center"><?= $client->birthdate ?></td>
+                        <td><?= $client->email ?></td>
+                        <td class="text-center"><?= $client->phone ?></td>
+                        <td><?= $client->interests ?></td>
+                        <td><?= $client->agent ?></td>
+                        <td><?= $client->created_at ?></td>
                     </tr>
+                <?php endforeach;?>
                 </tbody>
             </table>
 
             <div class="row">
                 <div class="col">
-                    <p class="mb-5">Total: <strong>[0]</strong></p>
+                    <p class="mb-5">Total: <strong><?= count($clients) ?></strong></p>
                 </div>
-                <div class="col text-end">
-                    <a href="#" class="btn btn-secondary px-4"><i class="fa-regular fa-file-excel me-2"></i>Exportar para XLSX</a>
-                    <a href="#" class="btn btn-secondary px-4"><i class="fa-solid fa-chevron-left me-2"></i>Voltar</a>
+                <div class="col mt-3 text-end">
+                    <a href="?ct=Admin&mt=exportClientsXLSX" class="btn btn-secondary px-4"><i class="fa-regular fa-file-excel me-2"></i>Exportar para XLSX</a>
+                    <a href="?ct=main&mt=index" class="btn btn-secondary px-4"><i class="fa-solid fa-chevron-left me-2"></i>Voltar</a>
                 </div>
             </div>
-
+            <?php endif; ?>
         </div>
     </div>
 </div>
+
+<script>
+    $(document).ready(function (){
+        //datatable
+        $('#table_clients').DataTable()
+    })
+
+</script>
