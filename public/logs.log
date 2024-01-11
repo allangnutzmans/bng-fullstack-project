@@ -101,3 +101,7 @@
 [2024-01-11T15:12:42.051318-03:00] BNG_LOGS.INFO: agente1@bng.com  logged out. [] []
 [2024-01-11T15:13:09.053887-03:00] BNG_LOGS.INFO: agente1@bng.com - logged in successfully. [] []
 [2024-01-11T15:14:11.676650-03:00] BNG_LOGS.INFO: agente1@bng.com - UPATED the password at the user profile section. [] []
+[2024-01-11T15:20:26.230497-03:00] BNG_LOGS.INFO: agente1@bng.com  logged out. [] []
+[2024-01-11T15:20:39.960195-03:00] BNG_LOGS.INFO: admin@bng.com - logged in successfully. [] []
+[2024-01-11T15:26:01.967911-03:00] BNG_LOGS.INFO: admin@bng.com  logged out. [] []
+[2024-01-11T15:26:15.563839-03:00] BNG_LOGS.INFO: admin@bng.com - logged in successfully. [] []

@@ -564,8 +564,6 @@ class Agent extends BaseController
 
         loggerRegister(getActiveUsername() . " - downloaded the list of clients to: " . $filename . " | total: " .
         count($data) -1 . " registers");
-
-
     }
 
 
