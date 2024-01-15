@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="assets/fontawesome/all.min.css">
     <!-- custom css -->
     <link rel="stylesheet" href="assets/app.css">
+
     <!-- flatpickr -->
     <?php if(isset($flatpickr)): ?>
     <link rel="stylesheet" href="assets/flatpickr/flatpickr.min.css">
@@ -28,6 +29,12 @@
     <!-- datatables -->
     <link rel="stylesheet" href="assets/datatables/datatables.min.css">
     <script src="assets/datatables/datatables.min.js"></script>
+
+    <!-- apexchartsjs -->
+    <?php if(isset($apexcharts)): ?>
+        <script src="assets/apexcharts/apexcharts.js"></script>
+    <?php endif; ?>
+
 
 </head>
 <body>
