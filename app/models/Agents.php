@@ -276,6 +276,43 @@ class Agents extends BaseModel
         $this->query("UPDATE agents FROM set passwrd = :passwrd, updated_at = NOW() WHERE id = :id", $params);
     }
 
+    public function checkNewAgentPurl($purl)
+    {
+        $param = [
+            ':purl' => $purl
+        ];
+
+        $sql = "SELECT id FROM agents WHERE purl = :purl";
+        $this->db_connect();
+        $results = $this->query($sql, $param);
+
+        if ($results->affected_rows == 0){
+            return ['status' => false];
+        } else {
+            return [
+                'status' => true,
+                'id' => $results->results[0]->id
+                ];
+        }
+
+    }
+
+    public function newAgentPassword($id, $password)
+    {
+        $params = [
+            ":id" => $id,
+            ":passwrd" => password_hash($password, PASSWORD_DEFAULT)
+        ];
+
+        $sql = "UPDATE agents SET 
+                  passwrd = :passwrd , 
+                  purl = NULL, 
+                  updated_at = NOW() 
+                  WHERE id = :id ";
+        $this->db_connect();
+        $this->non_query($sql, $params);
+    }
+
 }
 
 

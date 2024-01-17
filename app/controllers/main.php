@@ -3,6 +3,7 @@
 namespace bng\Controllers;
 
 use bng\Models\Agents;
+use Mpdf\Tag\A;
 
 class main extends BaseController
 {
@@ -206,21 +207,21 @@ class main extends BaseController
         $new_password = $_POST['text_new_password'];
         $repeat_new_password = $_POST['text_repeat_new_password'];
 
-        if (strlen($current_password < 6 || strlen($current_password) > 12)){
+        if (strlen($current_password) < 6 || strlen($current_password) > 12){
                 $validation_errors[] = "Current password should have between 6-12 characters";
                 $_SESSION['validation_errors'] = $validation_errors;
                 $this->changePasswordForm();
                 return;
         }
 
-        if (strlen($new_password < 6 || strlen($new_password) > 12)){
+        if (strlen($new_password) < 6 || strlen($new_password) > 12){
                 $validation_errors[] = "New password should have between 6-12 characters";
                 $_SESSION['validation_errors'] = $validation_errors;
                 $this->changePasswordForm();
                 return;
         }
 
-        if (strlen($repeat_new_password < 6 || strlen($repeat_new_password) > 12)){
+        if (strlen($repeat_new_password) < 6 || strlen($repeat_new_password) > 12){
                 $validation_errors[] = "New password should have between 6-12 characters";
                 $_SESSION['validation_errors'] = $validation_errors;
                 $this->changePasswordForm();
@@ -284,8 +285,143 @@ class main extends BaseController
 
     public function definePassword($purl = '')
     {
-        die($purl);
+        if (checkSession()) {
+            $this->index();
+            return;
+        }
+
+        if(empty($purl) || strlen($purl) != 20){
+            die('Erro nas credenciais de acesso.');
+        }
+
+        $model = new Agents();
+        $results = $model->checkNewAgentPurl($purl);
+
+        if (!$results['status']){
+            die('Erro nas credenciais de acesso.');
+        }
+
+        if (!empty($_SESSION['validation_errors'])){
+            $data['validation_errors'] = $_SESSION['validation_errors'];
+            unset($_SESSION['validation_errors']);
+        }
+
+        $data['purl'] = $purl;
+        $data['id'] = $results['id'];
+
+        $this->view('layouts/html_header');
+        $this->view('new_agent_define_password', $data);
+        $this->view('layouts/html_footer');
     }
 
+    public function definePasswordSubmit()
+    {
+
+        if (checkSession()) {
+            $this->index();
+            return;
+        }
+
+        if($_SERVER['REQUEST_METHOD'] != 'POST'){
+            $this->index();
+            return;
+        }
+
+
+        if(empty($_POST['purl']) || empty($_POST['id']) || strlen($_POST['purl']) != 20){
+            $this->index();
+            return;
+
+        }
+
+        $id = aes_decrypt($_POST['id']);
+        $purl = $_POST['purl'];
+
+
+        if(!$id){
+            $this->index();
+            return;
+        }
+
+        if (empty($_POST['text_password'])){
+            $validation_errors[] = "Please fill the password field";
+            $_SESSION['validation_errors'] = $validation_errors;
+            $this->definePassword($purl);
+        }
+
+        if (empty($_POST['text_repeat_password'])){
+            $validation_errors[] = "Please fill the repeat password field";
+            $_SESSION['validation_errors'] = $validation_errors;
+            $this->definePassword($purl);
+        }
+
+        $password = $_POST['text_password'];
+        $repeat_password = $_POST['text_repeat_password'];
+
+        if (strlen($password) < 6 || strlen($password) > 12){
+            $validation_errors[] = "Password should have between 6-12 characters";
+            $_SESSION['validation_errors'] = $validation_errors;
+            $this->definePassword($purl);
+            return;
+        }
+
+        if (strlen($repeat_password) < 6 || strlen($repeat_password) > 12){
+            $validation_errors[] = "Repeat password should have between 6-12 characters";
+            $_SESSION['validation_errors'] = $validation_errors;
+            $this->definePassword($purl);
+            return;
+        }
+
+        //check regex
+        if (!preg_match("/(?=.*\d)(?=.*[a-z])(?=.*[A-Z])/", $password)){
+            $validation_errors[] = "Password have at least, one upper, one lower and one last digit";
+            $_SESSION['validation_errors'] = $validation_errors;
+            $this->definePassword($purl);
+            return;
+        }
+        if (!preg_match("/(?=.*\d)(?=.*[a-z])(?=.*[A-Z])/", $repeat_password)){
+            $validation_errors[] = "Repeat password have at least, one upper, one lower and one last digit";
+            $_SESSION['validation_errors'] = $validation_errors;
+            $this->definePassword($purl);
+            return;
+        }
+
+        if ($password != $repeat_password){
+            $validation_errors[] = "Password and repeat password don't match";
+            $_SESSION['validation_errors'] = $validation_errors;
+            $this->definePassword($purl);
+            return;
+        }
+
+        $model = new Agents();
+        $model->newAgentPassword($id, $password);
+
+        //logger
+        loggerRegister("Successful password definition for agent ID = {$id}, purl = {$purl}");
+
+        $this->view('layouts/html_header');
+        $this->view('reset_password_define_password_success');
+        $this->view('layouts/html_footer');
+    }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

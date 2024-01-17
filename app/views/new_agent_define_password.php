@@ -11,20 +11,20 @@
                 <div class="row justify-content-center">
                     <div class="col-8">
 
-                        <form action="?mt=main&definePasswordSubmit" method="post">
+                        <form action="?mt=main&mt=definePasswordSubmit" method="post" novalidate>
 
                             <input type="hidden" name="purl" value="<?= $purl ?>">
-                            <input type="hidden" name="purl" value="<?= aes_encrypt($id) ?>">
+                            <input type="hidden" name="id" value="<?= aes_encrypt($id) ?>">
 
                             <p class="mb-3">Para concluir seu cadastro defina sua <strong> password</strong>.</p>
 
                             <div class="mb-3">
-                                <label for="text_new_password" class="form-label">Password</label>
+                                <label for="text_password" class="form-label">Password</label>
                                 <input type="password" name="text_password" id="text_password" class="form-control" required>
                             </div>
 
                             <div class="mb-3">
-                                <label for="text_repeat_new_password" class="form-label">Repetir password</label>
+                                <label for="text_repeat_password" class="form-label">Repetir password</label>
                                 <input type="password" name="text_repeat_password" id="text_repeat_password" class="form-control" required>
                             </div>
                             
@@ -32,9 +32,15 @@
                                 <button type="submit" class="btn btn-secondary"><i class="fa-solid fa-key me-2"></i>Definir password</button>
                             </div>
 
-                            <div class="alert alert-danger p-2 text-center">
-                                [mensagem de erro]
-                            </div>
+                            <?php if(isset($validation_errors)):?>
+                                <div class="alert alert-danger p-2 text-center">
+
+                                    <?php foreach ($validation_errors as $error): ?>
+                                        <li><?= $error ?></li>
+                                    <?php endforeach;?>
+                                </div>
+                            <?php endif;?>
+
 
                         </form>
 

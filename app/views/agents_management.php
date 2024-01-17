@@ -19,7 +19,7 @@
             <a href="?ct=main&mt=index" class="btn btn-secondary px-4"><i class="fa-solid fa-chevron-left me-2"></i>Voltar</a>
             </div>
             <?php else: ?>
-            <table class="table table-striped table-bordered">
+            <table class="table table-striped table-bordered" id="table_agents">
                 <thead class="table-dark">
                     <tr>
                         <th>Nome</th>
@@ -50,7 +50,7 @@
                 </tbody>
             </table>
 
-            <div class="row">
+            <div class="row mt-3">
                 <div class="col">
                     <p class="mb-5">Total: <strong><?= count($agents) ?></strong></p>
                 </div>
@@ -64,3 +64,9 @@
         </div>
     </div>
 </div>
+<script>
+    //Datatables.net
+    $(document).ready(function (){
+        $('#table_agents').DataTable();
+    })
+</script>
