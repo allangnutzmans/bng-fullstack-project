@@ -10,7 +10,7 @@
 
                         <hr>
 
-                        <form action="#" method="post">
+                        <form action="?ct=Admin&mt=newAgentSubmit" method="post" novalidate>
 
                             <div class="mb-3">
                                 <label for="text_name" class="form-label">Nome do agente</label>
@@ -21,18 +21,29 @@
                                 <label for="select_profile" class="form-label">Perfil</label>
                                 <select name="select_profile" id="select_profile" class="form-control" required>
                                     <option value="admin">Administrador</option>
-                                    <option value="agente">Agente</option>
+                                    <option value="agent">Agente</option>
                                 </select>
                             </div>
                             
                             <div class="mb-3 text-center">
-                                <a href="#" class="btn btn-secondary"><i class="fa-solid fa-xmark me-2"></i>Cancelar</a>
+                                <a href="?ct=Admin&mt=agentsManagment" class="btn btn-secondary"><i class="fa-solid fa-xmark me-2"></i>Cancelar</a>
                                 <button type="submit" class="btn btn-secondary"><i class="fa-solid fa-user-plus me-2"></i>Criar agente</button>
                             </div>
 
-                            <div class="alert alert-danger p-2 text-center">
-                                [mensagem de erro]
-                            </div>
+                            <?php if(isset($validation_errors)):?>
+                                <div class="alert alert-danger p-2 text-center">
+
+                                    <?php foreach ($validation_errors as $error): ?>
+                                        <li><?= $error ?></li>
+                                    <?php endforeach;?>
+                                </div>
+                            <?php endif;?>
+
+                            <?php if(isset($server_error)):?>
+                                <div class="alert alert-danger p-2 text-center">
+                                    <?= $server_error ?>
+                                </div>
+                            <?php endif;?>
 
                         </form>
                     </div>

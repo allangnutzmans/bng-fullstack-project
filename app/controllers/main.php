@@ -168,7 +168,7 @@ class main extends BaseController
         $this->view('layouts/html_footer');
         
     }
-        public function changePasswordSubmit()
+    public function changePasswordSubmit()
     {
 
         if(!checkSession()){
@@ -280,6 +280,11 @@ class main extends BaseController
         $this->view('footer');
         $this->view('layouts/html_footer');
 
+    }
+
+    public function definePassword($purl = '')
+    {
+        die($purl);
     }
 
 

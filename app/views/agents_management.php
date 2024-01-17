@@ -7,7 +7,7 @@
                     <h4>Gestão de agentes</h4>
                 </div>
                 <div class="col text-end">
-                    <a href="#" class="btn btn-secondary"><i class="fa-solid fa-user-plus me-2"></i>Novo agente</a>
+                    <a href="?ct=Admin&mt=newAgentForm" class="btn btn-secondary"><i class="fa-solid fa-user-plus me-2"></i>Novo agente</a>
                 </div>
             </div>
 
@@ -25,7 +25,9 @@
                         <th>Nome</th>
                         <th class="text-center">Perfil</th>
                         <th class="text-center">Último login</th>
-                        <th class="text-center">Total clientes</th>
+                        <th class="text-center">Criado em:</th>
+                        <th class="text-center">Atualizado em:</th>
+                        <th class="text-center">Excluído em:</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -35,11 +37,13 @@
                         <td><?= $agent->name ?></td>
                         <td class="text-center"><?= $agent->profile ?></td>
                         <td class="text-center"><?= $agent->last_login ?></td>
-                        <td class="text-center"><?= '?' ?></td>
+                        <td class="text-center"><?= $agent->created_at ?></td>
+                        <td class="text-center"><?= $agent->updated_at ?></td>
+                        <td class="text-center"><?= $agent->deleted_at ?></td>
                         <td class="text-end">
                             <a href="#"><i class="fa-regular fa-pen-to-square me-2"></i>Editar</a>
                             <span class="mx-2 opacity-50">|</span>
-                            <a href="#"><i class="fa-solid fa-trash-can me-2"></i>Eliminar</a>
+                            <a href="#"><i class="fa-solid fa-trash-can me-2"></i>Excluir</a>
                         </td>
                     </tr>
                 <?php endforeach;?>

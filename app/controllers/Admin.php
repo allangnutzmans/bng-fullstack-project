@@ -3,6 +3,7 @@
 namespace bng\Controllers;
 
 use bng\Models\AdminModel;
+use bng\System\SendEmail;
 use Mpdf\Mpdf;
 
 class Admin extends BaseController {
@@ -229,7 +230,6 @@ class Admin extends BaseController {
         $data['agents'] = $results->results;
         $data['user'] = $_SESSION['user'];
 
-
         $this->view('layouts/html_header',$data);
         $this->view('navbar', $data);
         $this->view('agents_management', $data);
@@ -237,5 +237,112 @@ class Admin extends BaseController {
         $this->view('layouts/html_footer');
 
     }
+
+    public function newAgentForm()
+    {
+        if(!checkSession() || $_SESSION['user']->profile != 'admin') {
+            header("Location: index.php");
+        }
+
+        if (!empty($_SESSION['validation_errors'])){
+            $data['validation_errors'] = $_SESSION['validation_errors'];
+            unset($_SESSION['validation_errors']);
+        }
+
+        //check is there a server error
+        if (!empty($_SESSION['server_error'])){
+            $data['server_error'] = $_SESSION['server_error'];
+            unset($_SESSION['server_error']);
+        }
+
+        $data['user'] = $_SESSION['user'];
+
+        $this->view('layouts/html_header',$data);
+        $this->view('navbar', $data);
+        $this->view('agents_add_new_frm', $data);
+        $this->view('footer');
+        $this->view('layouts/html_footer');
+
+
+    }
+
+    public function newAgentSubmit()
+    {
+        if (!checkSession() || $_SESSION['user']->profile != 'admin' || $_SERVER['REQUEST_METHOD'] != 'POST') {
+            header("Location: index.php");
+        }
+
+        //formValidation
+        $validation_errors = [];
+
+        //text_name
+        if (empty($_POST['text_name']) || !filter_var($_POST['text_name'], FILTER_VALIDATE_EMAIL)) {
+            $validation_errors[] = "Name field should be a valid email.";
+        }
+        //gender
+        $valid_profile = ['agent', 'admin'];
+        if (empty($_POST['select_profile']) || !in_array($_POST['select_profile'], $valid_profile)) {
+            $validation_errors[] = "Invalid selected profile";
+        }
+
+        //check if there is any validation error to return
+        if (!empty($validation_errors)) {
+            $_SESSION['validation_errors'] = $validation_errors;
+            $this->newAgentForm();
+            return;
+        }
+
+        // Check if there is an agent w/ same name
+        $model = new AdminModel();
+        $results = $model->checkIfAgentExists($_POST['text_name']);
+
+        if ($results) {
+            //person already exists
+            $_SESSION['server_error'] = "User it's already registered.";
+            $this->newAgentForm();
+            return;
+        }
+
+        //add agent to the db
+        $results = $model->addNewAgent($_POST);
+
+        if ($results['status'] == 'error'){
+
+            //logger
+            loggerRegister(getActiveUsername() . " - an error occurred during the creation of the new agent");
+            header('location:index.php');
+        }
+
+        $url = explode('?', $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI']);
+        $url = $url[0] . '?ct=main&mt=definePassword&purl=' . $results['purl'];
+        $email = new SendEmail();
+        $data = [
+            'to' => $_POST['text_name'],
+            'link' => $url
+        ];
+
+        $results = $email->sendEmail(APP_NAME . ': Finish registration', 'emailBodyNewAgent', $data);
+
+        if ($results['status'] == 'error'){
+
+            //logger
+            loggerRegister(getActiveUsername() . " - Unable to send the email for agent registration:" . $_POST['text_name']);
+            die($results['message']);
+
+        }
+
+        //logger
+        loggerRegister(getActiveUsername() . " - Email successfully sent! Email: " . $_POST['text_name']);
+
+        $data['user'] = $_SESSION['user'];
+        $data['email'] = $_POST['text_name'];
+
+        $this->view('layouts/html_header',$data);
+        $this->view('navbar', $data);
+        $this->view('agents_email_sent', $data);
+        $this->view('footer');
+        $this->view('layouts/html_footer');
+    }
+
 
 }
