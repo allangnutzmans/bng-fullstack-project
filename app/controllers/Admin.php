@@ -344,5 +344,235 @@ class Admin extends BaseController {
         $this->view('layouts/html_footer');
     }
 
+    public function editAgent($id)
+    {
+        if (!checkSession() || $_SESSION['user']->profile != 'admin'){
+            header('Location:index.php');
+        }
 
+        $id = aes_decrypt($id);
+
+        if (!$id){
+            header('Location:index.php');
+        }
+
+        //loads all the client data
+        $model = new AdminModel();
+        $results = $model->getAgentdata($id);
+
+        //display edit client form
+        $data['user'] = $_SESSION['user'];
+        $data['agent'] =  $results;
+        //$data['flatpickr'] = true;
+
+        //check for validation errors
+        if (!empty($_SESSION['validation_errors'])){
+            $data['validation_errors'] = $_SESSION['validation_errors'];
+            unset($_SESSION['validation_errors']);
+        }
+
+        //check is there a server error
+        if (!empty($_SESSION['server_error'])){
+            $data['server_error'] = $_SESSION['server_error'];
+            unset($_SESSION['server_error']);
+        }
+
+        $this->view('layouts/html_header');
+        $this->view('navbar', $data);
+        $this->view('agents_edit_frm', $data);
+        $this->view('footer');
+        $this->view('layouts/html_footer');
+    }
+
+    public function editAgentSubmit()
+    {
+        // check if session has a user with admin profile
+        if (!checkSession() || $_SESSION['user']->profile != 'admin') {
+            header('Location: index.php');
+        }
+
+        // check if there was a post
+        if ($_SERVER['REQUEST_METHOD'] != 'POST') {
+            header('Location: index.php');
+        }
+
+        // check if id is present and valid
+        if (empty($_POST['id'])) {
+            header('Location: index.php');
+        }
+
+        $id = aes_decrypt($_POST['id']);
+        if (!$id) {
+            header('Location: index.php');
+        }
+
+        // form validation
+        $validation_error = null;
+
+        // check if agent is a valid email
+        if (empty($_POST['text_name']) || !filter_var($_POST['text_name'], FILTER_VALIDATE_EMAIL)) {
+            $validation_error = "Agent name should be a valid email.";
+        }
+
+        // check if profile is valid
+        $valid_profiles = ['admin', 'agent'];
+        if (empty($_POST['select_profile']) || !in_array($_POST['select_profile'], $valid_profiles)) {
+            $validation_error = "Invalid selected profile.";
+        }
+
+        if (!empty($validation_error)) {
+            $_SESSION['validation_error'] = $validation_error;
+            $this->editAgent(aes_encrypt($id));
+            return;
+        }
+
+        // check if there is already another agent with the same username
+        $model = new AdminModel();
+        $results = $model->checkIfUserExists($id, $_POST['text_name']);
+
+        if ($results) {
+
+            // there is another agent with that name (email)
+            $_SESSION['server_error'] = "Já existe outro agente com o mesmo nome.";
+            $this->editAgent(aes_encrypt($id));
+            return;
+        }
+
+        // edit agent in the database
+        $results = $model->editAgent($id, $_POST);
+
+        if ($results->status == 'error') {
+
+            // logger
+            loggerRegister(getActiveUsername() . " - aconteceu um erro na edição de dados do agente ID: $id", 'error');
+            header('Location: index.php');
+        } else {
+
+            // logger
+            loggerRegister(getActiveUsername() . " - editado com sucesso os dados do agente ID: $id - " . $_POST['text_name']);
+        }
+
+        // go to the main admin page
+        $this->agentsManagment();
+    }
+
+
+    public function editDelete($id = '')
+    {
+        // check if session has a user with admin profile
+        if (!checkSession() || $_SESSION['user']->profile != 'admin') {
+            header('Location: index.php');
+        }
+
+        // check if id is valid
+        $id = aes_decrypt($id);
+        if (!$id) {
+            header('Location: index.php');
+        }
+
+        // get agent data
+        $model = new AdminModel();
+        $results = $model->getAgentdataAndTotalClients($id);
+
+        // display page for confirmation
+        $data['user'] = $_SESSION['user'];
+        $data['agent'] = $results;
+
+        // display the edit agent form
+        $this->view('layouts/html_header', $data);
+        $this->view('navbar', $data);
+        $this->view('agents_delete_confirmation', $data);
+        $this->view('footer');
+        $this->view('layouts/html_footer');
+    }
+    public function deleteAgentConfirm($id = '')
+    {
+        // check if session has a user with admin profile
+        if (!checkSession() || $_SESSION['user']->profile != 'admin') {
+            header('Location: index.php');
+        }
+
+        // check if id is valid
+        $id = aes_decrypt($id);
+        if (!$id) {
+            header('Location: index.php');
+        }
+
+        // delete agent (soft delete)
+        $model = new AdminModel();
+        $results = $model->deleteAgent($id);
+
+        if ($results->status == 'success') {
+
+            // logger
+            loggerRegister(getActiveUsername() . " - successfully delete agent ID: $id");
+        } else {
+
+            // logger
+            loggerRegister(getActiveUsername() . " - An error occurred during the deletion of agent ID: $id", 'error');
+        }
+
+        // go to the main page
+        $this->agentsManagment();
+    }
+
+    public function editRecover($id = '')
+    {
+        // check if session has a user with admin profile
+        if (!checkSession() || $_SESSION['user']->profile != 'admin') {
+            header('Location: index.php');
+        }
+
+        // check if id is valid
+        $id = aes_decrypt($id);
+        if (!$id) {
+            header('Location: index.php');
+        }
+
+        // get agent data
+        $model = new AdminModel();
+        $results = $model->getAgentdataAndTotalClients($id);
+
+        // display page for confirmation
+        $data['user'] = $_SESSION['user'];
+        $data['agent'] = $results;
+
+        // display the edit agent form
+        $this->view('layouts/html_header', $data);
+        $this->view('navbar', $data);
+        $this->view('agents_recover_confirmation', $data);
+        $this->view('footer');
+        $this->view('layouts/html_footer');
+    }
+    public function recoverAgentConfirm($id = '')
+    {
+        // check if session has a user with admin profile
+        if (!checkSession() || $_SESSION['user']->profile != 'admin') {
+            header('Location: index.php');
+        }
+
+        // check if id is valid
+        $id = aes_decrypt($id);
+
+        if (!$id) {
+            header('Location: index.php');
+        }
+
+        // get agent data
+        $model = new AdminModel();
+        $results = $model->recoverAgent($id);
+
+        if ($results->status == 'success') {
+
+            // logger
+            loggerRegister(getActiveUsername() . " - Successfully recovered agent ID: $id");
+        } else {
+
+            // logger
+            loggerRegister(getActiveUsername() . " - an error occurred during recovery agent ID: $id", 'error');
+        }
+
+        // go to the main page
+        $this->agentsManagment();
+    }
 }

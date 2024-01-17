@@ -13,7 +13,8 @@ class Agents extends BaseModel
 
         //check if user exists on db
         $this->db_connect();
-        $query = "SELECT id, passwrd FROM agents WHERE AES_ENCRYPT(:username, '".MYSQL_AES_KEY."') = name";
+        $query = "SELECT id, passwrd FROM agents WHERE AES_ENCRYPT(:username, '".MYSQL_AES_KEY."') = name
+                   AND deleted_at IS NULL";
         $results = $this->query($query, $params);
 
         //user dont exists -> retunr false

@@ -85,6 +85,7 @@ class AdminModel extends BaseModel {
             SELECT
             id,
             AES_DECRYPT(name, '".MYSQL_AES_KEY."') `name`,
+            passwrd,
             profile,
             last_login,
             created_at,
@@ -152,5 +153,111 @@ class AdminModel extends BaseModel {
             ];
         }
     }
+    public function getAgentdata($id)
+    {
+        $params = [
+            ':id' => $id
+        ];
+
+        $this->db_connect();
+        $sql = "SELECT id, AES_DECRYPT(name, '" . MYSQL_AES_KEY . "') name, 
+            profile, 
+            created_at, 
+            updated_at,
+            deleted_at
+            FROM agents WHERE id = :id";
+        $results = $this->query($sql, $params);
+
+        return $results->results[0];
+
+    }
+
+    public function checkIfUserExists($id, $text_name)
+    {
+        // check if there is another agent with the same name (email)
+        $params = [
+            ':id' => $id,
+            ':name' => $text_name
+        ];
+        $this->db_connect();
+        $results = $this->query(
+            "SELECT id FROM agents " .
+            "WHERE AES_ENCRYPT(:name, '" . MYSQL_AES_KEY . "') = name " .
+            "AND id <> :id"
+            , $params);
+
+        return $results->affected_rows != 0 ? true : false;
+    }
+
+    public function editAgent($id, $data)
+    {
+        $params = [
+            ':id' => $id,
+            ':name' => $data['text_name'],
+            ':profile' => $data['select_profile']
+        ];
+        $this->db_connect();
+        $results = $this->non_query(
+            "UPDATE agents SET " .
+            "name = AES_ENCRYPT(:name, '" . MYSQL_AES_KEY . "'), " .
+            "profile = :profile, " .
+            "updated_at = NOW() " .
+            "WHERE id = :id"
+            , $params);
+        return $results;
+    }
+
+    public function getAgentdataAndTotalClients($id)
+    {
+        $params = [
+            ':id' => $id
+        ];
+
+        $this->db_connect();
+        $sql = "SELECT 
+            id, 
+            AES_DECRYPT(name, '" . MYSQL_AES_KEY . "') name, 
+            profile, 
+            created_at, 
+            updated_at,
+            deleted_at,
+            (SELECT COUNT(*) FROM persons WHERE id_agent = :id) total_clients
+            FROM agents WHERE id = :id";
+        $results = $this->query($sql, $params);
+
+        return $results->results[0];
+    }
+
+    public function deleteAgent($id)
+    {
+        $params = [
+            ':id' => $id
+        ];
+
+        $this->db_connect();
+        $sql = "UPDATE agents SET
+                deleted_at = NOW()   
+                WHERE id = :id";
+
+        $results = $this->non_query($sql, $params);
+
+        return $results;
+    }
+
+    public function recoverAgent($id)
+    {
+        // recover the agent
+        $params = [
+            ':id' => $id
+        ];
+        $this->db_connect();
+        $results = $this->non_query(
+            "UPDATE agents SET " .
+            "deleted_at = NULL " .
+            "WHERE id = :id"
+            , $params);
+        return $results;
+    }
+
 
 }
