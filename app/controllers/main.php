@@ -3,6 +3,7 @@
 namespace bng\Controllers;
 
 use bng\Models\Agents;
+use bng\System\SendEmail;
 use Mpdf\Tag\A;
 
 class main extends BaseController
@@ -401,6 +402,320 @@ class main extends BaseController
 
         $this->view('layouts/html_header');
         $this->view('reset_password_define_password_success');
+        $this->view('layouts/html_footer');
+    }
+
+    public function resetPassword()
+    {
+        if (checkSession()){
+            $this->index();
+            return;
+        }
+
+        $data = [];
+
+        if (!empty($_SESSION['validation_errors'])){
+            $data['validation_errors'] = $_SESSION['validation_errors'];
+            unset($_SESSION['validation_errors']);
+        }
+
+        if (!empty($_SESSION['server_error'])){
+            $data['server_error'] = $_SESSION['server_error'];
+            unset($_SESSION['server_error']);
+        }
+
+        $this->view('layouts/html_header');
+        $this->view('reset_password_frm', $data);
+        $this->view('layouts/html_footer');
+    }
+
+    public function resetPasswordSubmit()
+    {
+        if (checkSession()) {
+            $this->index();
+            return;
+        }
+
+        // check if there was a post
+        if ($_SERVER['REQUEST_METHOD'] != 'POST') {
+            $this->index();
+            return;
+        }
+
+        // form validation
+        if (empty($_POST['text_username'])) {
+            $_SESSION['validation_error'] = "Username is required.";
+            $this->resetPassword();
+            return;
+        }
+        if (!filter_var($_POST['text_username'], FILTER_VALIDATE_EMAIL)) {
+            $_SESSION['validation_error'] = "Username should be a valid email";
+            $this->resetPassword();
+            return;
+        }
+
+        $username = $_POST['text_username'];
+
+        // set a code to recover password, send an email and display the code page
+        $model = new Agents();
+        $results = $model->setCodeToRecoverPassword($username);
+
+        if ($results['status'] == 'error') {
+
+            // logger
+            loggerRegister("An error occurred during the creation of the password recover code. User: $username", 'error');
+
+            $_SESSION['validation_error'] = "Unexpected error occurred. Please try again.";
+            $this->resetPassword();
+            return;
+        }
+
+        $id = $results['id'];
+        $code = $results['code'];
+
+
+        // code is stored. Send email with the code
+        $email = new SendEmail();
+        $results = $email->sendEmail(APP_NAME . ' Code to recover the password', 'codeRecoverPassword', ['to' => $username, 'code' => $results['code']]);
+
+        if ($results['status'] == 'error') {
+            // logger
+            loggerRegister("An error occurred during the creation of the code to recover the password. User: $username", 'error');
+
+            $_SESSION['validation_error'] = "Unexpected error occurred. Please try again.";
+            $this->resetPassword();
+            return;
+        }
+
+        // logger
+        loggerRegister("Email successfully sent to the password recover code. User: $username | Code: $code");
+
+        // the email was sent. Show the next view
+        $this->insertCode(aes_encrypt($id));
+    }
+
+    public function insertCode($id = '')
+    {
+        if (checkSession()) {
+            $this->index();
+            return;
+        }
+
+        // check if id is valid
+        if (empty($id)) {
+            $this->index();
+            return;
+        }
+
+        $id = aes_decrypt($id);
+
+        if (!$id) {
+            $this->index();
+            return;
+        }
+
+        $data['id'] = $id;
+
+
+        // check for validation errors or server errors
+        if (isset($_SESSION['validation_error'])) {
+            $data['validation_error'] = $_SESSION['validation_error'];
+            unset($_SESSION['validation_error']);
+        }
+
+        if (isset($_SESSION['server_error'])) {
+            $data['server_error'] = $_SESSION['server_error'];
+            unset($_SESSION['server_error']);
+        }
+
+        // display the view
+        $this->view('layouts/html_header');
+        $this->view('reset_password_insert_code', $data);
+        $this->view('layouts/html_footer');
+    }
+
+    public function insertCodeSubmit($id = '')
+    {
+        // if there is a open session, gets out!
+        if(checkSession()){
+            $this->index();
+            return;
+        }
+
+        // check if id is valid
+        if(empty($id)){
+            $this->index();
+            return;
+        }
+
+        $id = aes_decrypt($id);
+        if(!$id){
+            $this->index();
+            return;
+        }
+
+        // check if is a post
+        if($_SERVER['REQUEST_METHOD'] != 'POST'){
+            $this->index();
+            return;
+        }
+
+        // form validation
+        if(empty($_POST['text_code'])){
+            $_SESSION['validation_error'] = "Code field is required";
+            $this->insertCode(aes_encrypt($id));
+            return;
+        }
+
+        $code = $_POST['text_code'];
+
+        if(!preg_match("/^\d{6}$/", $code)){
+            $_SESSION['validation_error'] = "Code field should have 6 digits.";
+            $this->insertCode(aes_encrypt($id));
+            return;
+        }
+
+        // check if the code is the same that is stored in the database
+        $model = new Agents();
+        $results = $model->checkIfResetCodeIsCorrect($id, $code);
+
+        if(!$results['status']){
+
+            $_SESSION['server_error'] = "Wrong code.";
+            $this->insertCode(aes_encrypt($id));
+            return;
+
+        }
+
+        // the code is correct. Let's define the password
+        $this->resetDefinePassword(aes_encrypt($id));
+    }
+
+    public function resetDefinePassword($id = '')
+    {
+        // if there is open session, gets out!
+        if(checkSession()){
+            $this->index();
+            return;
+        }
+
+        // check if id is valid
+        if(empty($id)){
+            $this->index();
+            return;
+        }
+
+        $id = aes_decrypt($id);
+        if(!$id){
+            $this->index();
+            return;
+        }
+
+        $data['id'] = $id;
+
+        // check for validation error
+        if(isset($_SESSION['validation_error'])){
+            $data['validation_error'] = $_SESSION['validation_error'];
+            unset($_SESSION['validation_error']);
+        }
+
+        // check for server error
+        if(isset($_SESSION['server_error'])){
+            $data['server_error'] = $_SESSION['server_error'];
+            unset($_SESSION['server_error']);
+        }
+
+        // display the form to define de new password
+        $this->view('layouts/html_header');
+        $this->view('reset_password_define_password_frm', $data);
+        $this->view('layouts/html_footer');
+    }
+
+    public function resetDefinePasswordSubmit($id = '')
+    {
+        // if there is an open session, gets out!
+        if(checkSession()){
+            $this->index();
+            return;
+        }
+
+        // check if id is valid
+        if(empty($id)){
+            $this->index();
+            return;
+        }
+
+        $id = aes_decrypt($id);
+        if(!$id){
+            $this->index();
+            return;
+        }
+
+        // check if there was a post
+        if($_SERVER['REQUEST_METHOD'] != 'POST'){
+            $this->index();
+            return;
+        }
+
+        // form validation
+        if(empty($_POST['text_new_password'])){
+            $_SESSION['validation_error'] = "New password is required.";
+            $this->resetDefinePassword(aes_encrypt($id));
+            return;
+        }
+        if(empty($_POST['text_repeat_new_password'])){
+            $_SESSION['validation_error'] = "A repeat new password is required.";
+            $this->resetDefinePassword(aes_encrypt($id));
+            return;
+        }
+
+        // get the input values
+        $new_password = $_POST['text_new_password'];
+        $repeat_new_password = $_POST['text_repeat_new_password'];
+
+        // check if all passwords have more than 6 and less than 12 characters
+        if(strlen($new_password) < 6 || strlen($new_password) > 12){
+            $_SESSION['validation_error'] = "New password should have between 6 - 12 characters.";
+            $this->resetDefinePassword(aes_encrypt($id));
+            return;
+        }
+        if(strlen($repeat_new_password) < 6 || strlen($repeat_new_password) > 12){
+            $_SESSION['validation_error'] = "Repeat new password should have between 6 - 12 characters.";
+            $this->resetDefinePassword(aes_encrypt($id));
+            return;
+        }
+
+        // check if all password have, at least one upper, one lower and one digit
+
+        // use positive look ahead
+        if(!preg_match("/(?=.*\d)(?=.*[a-z])(?=.*[A-Z])/", $new_password)){
+            $_SESSION['validation_error'] = "New password should have, one uppercase, one lowercase and one digit.";
+            $this->resetDefinePassword(aes_encrypt($id));
+            return;
+        }
+        if(!preg_match("/(?=.*\d)(?=.*[a-z])(?=.*[A-Z])/", $repeat_new_password)){
+            $_SESSION['validation_error'] = "Repeat new password should have, one uppercase, one lowercase and one digit.";
+            $this->resetDefinePassword(aes_encrypt($id));
+            return;
+        }
+
+        // check if both passwords are equal
+        if($new_password != $repeat_new_password){
+            $_SESSION['validation_error'] = "Passwords don't match";
+            $this->resetDefinePassword(aes_encrypt($id));
+            return;
+        }
+
+        // updates the agent's password in the database
+        $model = new Agents();
+        $model->changeAgentPassword($id, $new_password);
+
+        // logger
+        loggerRegister("Successfully password changed. User ID: $id after the request to recover password.");
+
+        // display success page
+        $this->view('layouts/html_header');
+        $this->view('profile_change_password_success');
         $this->view('layouts/html_footer');
     }
 

@@ -11,7 +11,7 @@
                 <div class="row justify-content-center">
                     <div class="col-8">
 
-                        <form action="#" method="post">
+                        <form action="?ct=main&mt=resetDefinePasswordSubmit&id=<?= aes_encrypt($id) ?>" method="post">
 
                             <p class="mb-3">Introduza os dados da <strong>nova password</strong>.</p>
 
@@ -29,8 +29,19 @@
                                 <button type="submit" class="btn btn-secondary"><i class="fa-solid fa-key me-2"></i>Definir password</button>
                             </div>
 
-                            <div class="alert alert-danger p-2 text-center">
-                                [mensagem de erro]
+                                <?php if(!empty($validation_errors)): ?>
+                                    <div class="alert alert-danger p-2 text-center">
+                                        <?php foreach ($validation_errors as $error):?>
+                                            <div><?= $error ?></div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
+
+                                <?php if(!empty($server_error)): ?>
+                                    <div class="alert alert-danger p-2 text-center">
+                                        <div><?= $server_error ?></div>
+                                    </div>
+                                <?php endif; ?>
                             </div>
 
                         </form>

@@ -314,6 +314,73 @@ class Agents extends BaseModel
         $this->non_query($sql, $params);
     }
 
+    public function setCodeToRecoverPassword($username)
+    {
+        $params = [
+            ":username" => $username,
+        ];
+
+        $sql = "SELECT id FROM agents 
+                 WHERE AES_ENCRYPT(:username ,'".MYSQL_AES_KEY."') = name
+                 AND passwrd IS NOT NULL
+                 AND deleted_at IS NULL";
+        $this->db_connect();
+        $results = $this->query($sql, $params);
+
+        if ($results->affected_rows == 0) {
+            return ['status' => 'error'];
+        }
+
+        $code = rand(100000, 999999);
+        $id = $results->results[0]->id;
+
+        $params = [
+            ':id' => $id,
+            ':code' => $code
+        ];
+
+        $sql = "UPDATE agents SET code = :code WHERE id = :id";
+        $results = $this->non_query($sql, $params);
+
+        return [
+            'status' => 'success',
+            'id' => $id,
+            'code' => $code
+        ];
+
+    }
+
+    public function checkIfResetCodeIsCorrect($id, $code)
+    {
+        $params = [
+            ':id' => $id,
+            ':code' => $code
+        ];
+
+        $sql = "SELECT id FROM agents WHERE id = :id AND code = :code";
+        $this->db_connect();
+        $results = $this->non_query($sql, $params);
+
+        if ($results->affected_rows == 0){
+            return ['status' => false];
+        } else {
+            return ['status' => true];
+        }
+    }
+
+    public function changeAgentPassword($id, $new_password)
+    {
+        $params = [
+            ':id' => $id,
+            ':passwrd' => password_hash($new_password, PASSWORD_DEFAULT)
+        ];
+
+        $sql = "UPDATE agents SET passwrd = :passwrd, updated_at = NOW() WHERE id = :id";
+        $this->db_connect();
+        $this->non_query($sql, $params);
+
+    }
+
 }
 
 

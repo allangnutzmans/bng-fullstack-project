@@ -49,4 +49,12 @@ class SendEmail
         $html .= "<a href='". $link ."'>Concluir registro<a/>";
         return $html;
     }
+
+    private function codeRecoverPassword($data)
+    {
+        $code = $data['code'];
+        $html = "<p> Código para redefinição de senha:<p>";
+        $html .= "<h3>{$code}<a/>";
+        return $html;
+    }
 }

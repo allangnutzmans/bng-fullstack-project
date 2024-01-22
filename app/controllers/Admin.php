@@ -455,8 +455,6 @@ class Admin extends BaseController {
         // go to the main admin page
         $this->agentsManagment();
     }
-
-
     public function editDelete($id = '')
     {
         // check if session has a user with admin profile
@@ -551,23 +549,21 @@ class Admin extends BaseController {
             header('Location: index.php');
         }
 
-        // check if id is valid
+        //check if id is valid
         $id = aes_decrypt($id);
 
         if (!$id) {
             header('Location: index.php');
         }
 
-        // get agent data
+        //get agent data
         $model = new AdminModel();
         $results = $model->recoverAgent($id);
 
         if ($results->status == 'success') {
-
             // logger
             loggerRegister(getActiveUsername() . " - Successfully recovered agent ID: $id");
         } else {
-
             // logger
             loggerRegister(getActiveUsername() . " - an error occurred during recovery agent ID: $id", 'error');
         }
@@ -575,4 +571,39 @@ class Admin extends BaseController {
         // go to the main page
         $this->agentsManagment();
     }
+
+    public function exportAgentsXLSX()
+    {
+        if (!checkSession() || $_SESSION['user']->profile != 'admin') {
+            header('Location: index.php');
+        }
+
+        //get Agents data
+        $model = new AdminModel();
+        $results = $model->getDataFromAgentsAndClients();
+
+        $data[] = ['name', 'profile', 'active', 'last login', 'created at', 'updated at', 'deleted at', 'total active clients', 'total deleted clients'];
+
+        foreach ($results as $row){
+            //remove id
+            unset($row->id);
+
+            $data[] = (array)$row;
+        }
+
+        $filename = 'output_' . time() . '.xlsx';
+        $spreadsheet =  new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet->removeSheetByIndex(0);
+        $worksheet = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($spreadsheet, 'dados');
+        $spreadsheet->addSheet($worksheet);
+        $worksheet->fromArray($data);
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        header('Content-type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-disposition: attachment; filename="'. urlencode($filename) );
+        $writer->save('php://output');
+
+        loggerRegister(getActiveUsername() . " - downloaded the list of agents to the file: {$$filename}");
+    }
+
 }
