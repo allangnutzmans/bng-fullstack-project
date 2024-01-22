@@ -249,8 +249,7 @@ class Agents extends BaseModel
         ];
 
         $this->db_connect();
-        $result = $this->query("SELECT passwrd FROM agents WHERE " .
-        "id = :id", $param);
+        $result = $this->query("SELECT passwrd FROM agents WHERE id = :id", $param);
 
 
         if (password_verify($current_password, $result->results[0]->passwrd)){
@@ -267,14 +266,13 @@ class Agents extends BaseModel
 
     public function updateAgentPassword($new_password)
     {
-        $new_password = "Aa123456";
         $params = [
             ":passwrd" => password_hash($new_password, PASSWORD_DEFAULT),
             ":id" => $_SESSION['user']->id
         ];
 
         $this->db_connect();
-        $this->query("UPDATE agents FROM set passwrd = :passwrd, updated_at = NOW() WHERE id = :id", $params);
+        $res = $this->non_query("UPDATE agents SET passwrd = :passwrd, updated_at = NOW() WHERE id = :id", $params);
     }
 
     public function checkNewAgentPurl($purl)

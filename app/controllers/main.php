@@ -268,11 +268,12 @@ class main extends BaseController
             return;
         }
 
+
         //form data is ok
         $model->updateAgentPassword($new_password);
 
         //logger
-        loggerRegister(getActiveUsername() . " - UPATED the password at the user profile section.");
+        loggerRegister(getActiveUsername() . " - UPDATED the password at the user profile section.");
 
         //show view
         $data['user'] = $_SESSION['user'];
